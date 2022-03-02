@@ -5,9 +5,9 @@ import { hasMetamask } from '@/utils/helpers';
 import { CHAIN_IDS, getAddChainParameters, metamask } from '@/web3';
 import {
   ConnectDialog,
-  ConnectDialogRefProps,
+  ConnectPromptFn,
   ExtensionDialog,
-  NetworkDialogRefProps,
+  NetworkPromptFn,
   PromptNetworkDialog,
 } from '@/components/index';
 
@@ -33,8 +33,8 @@ const getConnector = () => {
 
 export const AppWeb3Provider: React.FC = ({ children }) => {
   const [openInstallHelper, setOpenInstallHelper] = React.useState(false);
-  const networkRef = useRef<NetworkDialogRefProps>();
-  const connectRef = useRef<ConnectDialogRefProps>();
+  const networkRef = useRef<NetworkPromptFn>();
+  const connectRef = useRef<ConnectPromptFn>();
 
   const [_connector, hooks] = useMemo(() => getConnector(), []);
 
@@ -87,7 +87,7 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
   const unsupportedChainId = Boolean(chainId) && !CHAIN_IDS.includes(chainId!);
 
   const changeChain = useCallback(async () => {
-    const nextId = await networkRef.current?.userSelectNetwork();
+    const nextId = await networkRef.current?.prompt();
 
     if (nextId) {
       await activateChain(nextId);
@@ -95,7 +95,7 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
   }, [networkRef.current, activateChain]);
 
   const connect = useCallback(async () => {
-    const data = await connectRef.current?.userSelectWallet();
+    const data = await connectRef.current?.prompt();
 
     await activateChain(data?.chainId);
   }, [connectRef.current]);

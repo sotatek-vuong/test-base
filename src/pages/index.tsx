@@ -18,7 +18,7 @@ import {
   RHFAppInput,
   RHFChain,
   TokenDialogPrompt,
-  TokenDialogRefProps,
+  TokenPromptFn,
 } from '@/components/index';
 import { Controller, useForm } from 'react-hook-form';
 import { Swap, Metamask, ArrowDown, Alert as AlertIcon } from '@/icons';
@@ -40,7 +40,7 @@ interface SwapForm {
 
 const Home: NextPage = () => {
   const { account = '', changeChain } = useAppWeb3();
-  const tokenDialogRef = useRef<TokenDialogRefProps>()!;
+  const tokenDialogRef = useRef<TokenPromptFn>()!;
 
   const { control, handleSubmit, watch, getValues, setValue } = useForm<SwapForm>({
     defaultValues: {
@@ -144,7 +144,7 @@ const Home: NextPage = () => {
                     value={value?.name || ''}
                     label="Asset"
                     onClick={async () => {
-                      const token = await tokenDialogRef.current?.userSelectToken();
+                      const token = await tokenDialogRef.current?.prompt();
                       if (token) {
                         onChange(token);
                       }

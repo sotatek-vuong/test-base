@@ -1,15 +1,9 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import { BaseDialog, BaseDialogProps, Link } from '@/components/index';
 import { Typography, Box, Stack, Checkbox, FormControlLabel } from '@mui/material';
 import { ChainAssets } from '@/utils/constants/chains';
 import { Metamask, CheckCircle } from '@/icons';
+import { PromptFn, useDialogPrompt } from '@/hooks/useDialogPrompt';
 
 export interface ConnectDialogProps extends Omit<BaseDialogProps, 'open' | 'onClose'> {}
 
@@ -19,14 +13,10 @@ type UserSelection = {
   agreeTerms: boolean;
 } | null;
 
-export type ConnectDialogRefProps =
-  | {
-      userSelectWallet: () => Promise<UserSelection>;
-    }
-  | undefined;
+export type ConnectPromptFn = PromptFn<UserSelection>;
 
-export const ConnectDialog = forwardRef<ConnectDialogRefProps, ConnectDialogProps>((props, ref) => {
-  const [open, setOpen] = useState(false);
+export const ConnectDialog = forwardRef<ConnectPromptFn, ConnectDialogProps>((props, ref) => {
+  const { open, handleResolve, handleReject } = useDialogPrompt(ref);
 
   const [data, setData] = useState<Partial<UserSelection>>(null);
 
@@ -36,41 +26,12 @@ export const ConnectDialog = forwardRef<ConnectDialogRefProps, ConnectDialogProp
     }
   }, [open]);
 
-  const promiseRef = useRef<{ resolve: (value: UserSelection) => void } | null>(null);
-
-  const prompt = useCallback(() => {
-    setOpen(true);
-    return new Promise<UserSelection>((resolve) => {
-      promiseRef.current = { resolve };
-    });
-  }, []);
-
-  useImperativeHandle(ref, () => ({ userSelectWallet: prompt }), [prompt]);
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    promiseRef.current = null;
-  }, [promiseRef.current]);
-
-  const handleResolve = useCallback(
-    (next: UserSelection) => {
-      promiseRef.current?.resolve(next);
-      handleClose();
-    },
-    [handleClose],
-  );
-
   useEffect(() => {
     if (data && data.agreeTerms && data.chainId && data.wallet) {
       // @ts-ignore
       handleResolve(data);
     }
   }, [data?.agreeTerms, data?.chainId, data?.wallet]);
-
-  const handleReject = useCallback(() => {
-    promiseRef.current?.resolve(null);
-    handleClose();
-  }, [handleClose]);
 
   return (
     <BaseDialog

@@ -2,9 +2,9 @@ import { ArrowDown } from '@/icons';
 import { ChainAssets } from '@/utils/constants/chains';
 import { Stack, StackProps, Paper, Typography } from '@mui/material';
 import _ from 'lodash';
-import React, { useCallback, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useController, UseControllerProps } from 'react-hook-form';
-import { PromptNetworkDialog, NetworkDialogRefProps } from '@/components/index';
+import { PromptNetworkDialog, NetworkPromptFn } from '@/components/index';
 
 export interface RHFChainProps extends StackProps {
   label?: string;
@@ -21,7 +21,7 @@ export const RHFChain: React.FC<RHFChainProps> = ({
   const {
     field: { value, onChange },
   } = useController(controller);
-  const dialogRef = useRef<NetworkDialogRefProps>();
+  const dialogRef = useRef<NetworkPromptFn>();
 
   const assets = _.find(ChainAssets, { id: value }) || ChainAssets[0];
 
@@ -35,7 +35,7 @@ export const RHFChain: React.FC<RHFChainProps> = ({
       <Stack
         component={Paper}
         onClick={async () => {
-          const next = await dialogRef.current?.userSelectNetwork();
+          const next = await dialogRef.current?.prompt();
 
           if (next && next !== value) onChange(next);
         }}
