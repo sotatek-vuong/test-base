@@ -1,0 +1,10 @@
+export { default as Logo } from './logo.svg';
+export { default as ArrowDown } from './arrow-down.svg';
+export { default as Close } from './close.svg';
+export { default as Check } from './check.svg';
+export { default as Warning } from './warning.svg';
+export { default as Swap } from './swap.svg';
+export { default as Metamask } from './metamask.svg';
+export { default as Search } from './search.svg';
+export { default as Alert } from './alert.svg';
+export { default as CheckCircle } from './check-circle.svg';
