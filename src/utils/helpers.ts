@@ -24,7 +24,7 @@ export const shortenAddress = (input: string, start = 4, end = 4) => {
 };
 
 export const getCoinPathBySymbol = (symbol: string, extension = 'svg') => {
-  return `/coins/${symbol.toLocaleUpperCase()}.${extension}`;
+  return `/coins/${symbol.toLowerCase()}.${extension}`;
 };
 
 export const isNativeToken = (address: string) => {
