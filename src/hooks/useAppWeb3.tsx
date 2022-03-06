@@ -1,21 +1,37 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import _ from 'lodash';
-import { Web3ReactHooks } from '@web3-react/core';
-import { hasMetamask } from '@/utils/helpers';
-import { CHAIN_IDS, getAddChainParameters, metamask } from '@/web3';
+import { getPriorityConnector } from '@web3-react/core';
+import { hasMetamask, isClient } from '@/utils';
+import { ChainIdToChainName, getAddChainParameters, getChainIdByName, metamask } from '@/web3';
 import {
   ConnectDialog,
   ConnectPromptFn,
   ExtensionDialog,
   NetworkPromptFn,
   PromptNetworkDialog,
-} from '@/components/index';
+} from '@/components';
+import { ethers } from 'ethers';
+import { Connector } from '@web3-react/types';
 
-interface AppWeb3ContextInterface extends ReturnType<Web3ReactHooks['useWeb3React']> {
+interface AddTokenParams {
+  address: string;
+  symbol: string;
+  decimals: number;
+  image?: string;
+}
+
+interface AppWeb3ContextInterface {
   connect: () => Promise<any>;
   disconnect: (...args: any[]) => any;
   changeChain: () => Promise<any>;
-  unsupportedChainId: boolean;
+  addToken: (token: AddTokenParams, type?: string) => Promise<any>;
+  chainName?: string;
+  connector?: Connector;
+  provider?: ethers.providers.Web3Provider;
+  account?: string;
+  chainId?: number;
+  isActive: boolean;
+  error?: Error;
   isActivating: boolean;
 }
 
@@ -23,11 +39,11 @@ const AppWeb3Context = createContext<AppWeb3ContextInterface | null>(null);
 
 export const useAppWeb3 = () => useContext(AppWeb3Context)!;
 
-const getConnector = () => {
-  if (hasMetamask()) {
-    return metamask;
+const getConnector = (): ReturnType<typeof getPriorityConnector> => {
+  if (isClient()) {
+    return getPriorityConnector([metamask[0], metamask[1]]);
   }
-
+  // @ts-ignore
   return [];
 };
 
@@ -36,78 +52,110 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
   const networkRef = useRef<NetworkPromptFn>();
   const connectRef = useRef<ConnectPromptFn>();
 
-  const [_connector, hooks] = useMemo(() => getConnector(), []);
+  const {
+    usePriorityConnector,
+    usePriorityProvider,
+    usePriorityAccount,
+    usePriorityChainId,
+    usePriorityIsActive,
+    usePriorityIsActivating,
+    usePriorityError,
+  } = useMemo(getConnector, []);
+  const chainId = usePriorityChainId?.();
 
-  const { useProvider, useIsActivating, useWeb3React } = hooks || {};
+  const connector = usePriorityConnector?.();
+  const provider = usePriorityProvider?.(chainId);
+  const account = usePriorityAccount?.();
+  const isActive = usePriorityIsActive?.();
+  const isActivating = usePriorityIsActivating?.();
+  const error = usePriorityError?.();
 
-  const provider = useProvider?.();
-  const isActivating = useIsActivating?.();
-
-  const web3React = useWeb3React?.(provider) || {};
-  const { connector, chainId } = web3React;
+  const chainName = chainId ? ChainIdToChainName[chainId] : undefined;
 
   useEffect(() => {
-    connector?.connectEagerly?.();
-  }, [connector]);
+    if (connector) {
+      connector!.connectEagerly!();
+    }
+  }, [Boolean(connector)]);
 
   const addChain = useCallback(
-    async (chainId) => {
-      if (!connector?.provider) return;
-
-      if (!CHAIN_IDS.includes(chainId)) return;
+    async (_chainName?: string) => {
+      const _chainId = getChainIdByName(_chainName);
+      if (_chainId === -1) return;
 
       try {
-        await connector.provider.request({
-          method: 'wallet_addEthereumChain',
-          params: [getAddChainParameters(chainId)],
-        });
+        await provider?.send('wallet_addEthereumChain', [getAddChainParameters(_chainId)]);
       } catch (err) {
         console.log(err);
       }
     },
-    [connector?.provider],
+    [provider],
+  );
+
+  const addToken = useCallback(
+    async (token: AddTokenParams, type = 'ERC20') => {
+      try {
+        // @ts-ignore
+        await provider?.send('wallet_watchAsset', { type, options: token });
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    [provider],
   );
 
   const activateChain = useCallback(
-    async (nextChainId) => {
+    async (_chainName?: string) => {
       if (!hasMetamask()) {
         return setOpenInstallHelper(true);
       }
-      if (!CHAIN_IDS.includes(nextChainId)) return;
+      if (getChainIdByName(_chainName) === -1) return;
 
       try {
-        await addChain(nextChainId);
-        await connector.activate(nextChainId);
+        await addChain(_chainName);
+        await connector?.activate(_chainName);
       } catch (err) {
         console.log({ err });
       }
     },
     [connector, addChain],
   );
-  const unsupportedChainId = Boolean(chainId) && !CHAIN_IDS.includes(chainId!);
 
   const changeChain = useCallback(async () => {
-    const nextId = await networkRef.current?.prompt();
+    const _chainName = await networkRef.current?.prompt();
 
-    if (nextId) {
-      await activateChain(nextId);
+    if (_chainName) {
+      await activateChain(_chainName);
     }
-  }, [networkRef.current, activateChain]);
+  }, [activateChain]);
 
   const connect = useCallback(async () => {
     const data = await connectRef.current?.prompt();
 
-    await activateChain(data?.chainId);
-  }, [connectRef.current]);
+    await activateChain(data?.chainName);
+  }, [activateChain]);
 
-  const disconnect = () => _connector?.deactivate(_connector);
+  const disconnect = () => connector?.deactivate();
 
   return (
     <AppWeb3Context.Provider
-      value={{ ...web3React, isActivating, unsupportedChainId, connect, disconnect, changeChain }}>
+      value={{
+        connector,
+        provider,
+        account,
+        chainId,
+        isActive,
+        isActivating,
+        error,
+        chainName,
+        connect,
+        disconnect,
+        changeChain,
+        addToken,
+      }}>
       {children}
       <ExtensionDialog open={openInstallHelper} onClose={() => setOpenInstallHelper(false)} />
-      <PromptNetworkDialog ref={networkRef} defaultChainId={chainId} />
+      <PromptNetworkDialog ref={networkRef} defaultChain={chainName} />
       <ConnectDialog ref={connectRef} />
     </AppWeb3Context.Provider>
   );

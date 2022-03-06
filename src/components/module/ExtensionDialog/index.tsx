@@ -1,6 +1,6 @@
 import { Typography, Button, Box, Stack, alpha } from '@mui/material';
 import { Warning } from '@/icons';
-import { BaseDialog, BaseDialogProps } from '@/components/index';
+import { BaseDialog, BaseDialogProps } from '@/components';
 
 export interface ExtensionDialogProps extends BaseDialogProps {}
 

@@ -27,6 +27,6 @@ export const getCoinPathBySymbol = (symbol: string, extension = 'svg') => {
   return `/coins/${symbol.toLowerCase()}.${extension}`;
 };
 
-export const isNativeToken = (address: string) => {
-  return BigNumber.from(address).eq(0);
+export const isNativeToken = (address: any): address is string => {
+  return typeof address === 'string' && Boolean(address) && BigNumber.from(address).eq(0);
 };

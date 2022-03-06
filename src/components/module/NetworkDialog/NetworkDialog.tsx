@@ -1,37 +1,34 @@
-import { List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
-import { BaseDialog } from '@/components/index';
+import { List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { BaseDialog, BaseDialogProps } from '@/components';
 
-import { BaseDialogProps } from '@/components/core/BaseDialog';
-import { ChainAssets } from '@/utils/constants/chains';
+import { CHAIN_ASSETS } from '@/web3';
 import React from 'react';
 import { Check } from '@/icons';
 
-const available = ChainAssets.filter((x) => x.id);
-
 export interface NetworkDialogProps extends BaseDialogProps {
-  defaultChainId?: number;
-  disabledChainIds?: number[];
-  onChangeNetwork?: (next: number) => any;
+  defaultChain?: string;
+  disabledChains?: (string | undefined)[];
+  onChangeChain?: (next: string) => any;
 }
 
 export const NetworkDialog: React.FC<NetworkDialogProps> = ({
-  defaultChainId,
-  onChangeNetwork,
-  disabledChainIds = [],
+  defaultChain,
+  onChangeChain,
+  disabledChains = [],
   ...props
 }) => {
   return (
     <BaseDialog title="Select a network" {...props} PaperProps={{ sx: { px: 0 } }}>
       <List disablePadding>
-        {available.map(({ id, txt, icon }, index) => {
-          const selected = defaultChainId !== undefined && defaultChainId === id;
+        {CHAIN_ASSETS.map(({ chainName, txt, icon }, index) => {
+          const selected = defaultChain && defaultChain === chainName;
 
-          const disabled = disabledChainIds.includes(id);
+          const disabled = disabledChains.includes(chainName);
 
           return (
             <ListItemButton
               disabled={disabled}
-              onClick={() => id && onChangeNetwork && onChangeNetwork(id)}
+              onClick={() => chainName && onChangeChain && onChangeChain(chainName)}
               alignItems="center"
               sx={{
                 px: 4,

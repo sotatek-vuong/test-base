@@ -1,15 +1,15 @@
 import React, { forwardRef, useEffect, useState } from 'react';
-import { BaseDialog, BaseDialogProps, Link } from '@/components/index';
+import { BaseDialog, BaseDialogProps, Link } from '@/components';
 import { Typography, Box, Stack, Checkbox, FormControlLabel } from '@mui/material';
-import { ChainAssets } from '@/utils/constants/chains';
-import { Metamask, CheckCircle } from '@/icons';
-import { PromptFn, useDialogPrompt } from '@/hooks/useDialogPrompt';
+import { CHAIN_ASSETS } from '@/web3';
+import { CheckCircle } from '@/icons';
+import { PromptFn, useDialogPrompt } from '@/hooks';
 
 export interface ConnectDialogProps extends Omit<BaseDialogProps, 'open' | 'onClose'> {}
 
 type UserSelection = {
   wallet: 'binance' | 'metamask';
-  chainId: number;
+  chainName: string;
   agreeTerms: boolean;
 } | null;
 
@@ -27,11 +27,12 @@ export const ConnectDialog = forwardRef<ConnectPromptFn, ConnectDialogProps>((pr
   }, [open]);
 
   useEffect(() => {
-    if (data && data.agreeTerms && data.chainId && data.wallet) {
+    if (data && data.agreeTerms && data.chainName && data.wallet) {
       // @ts-ignore
       handleResolve(data);
     }
-  }, [data?.agreeTerms, data?.chainId, data?.wallet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.agreeTerms, data?.chainName, data?.wallet]);
 
   return (
     <BaseDialog
@@ -62,11 +63,11 @@ export const ConnectDialog = forwardRef<ConnectPromptFn, ConnectDialogProps>((pr
         <Box>
           <Typography sx={{ mb: 2.5 }}>2. Choose Network</Typography>
           <Stack direction="row" spacing={5}>
-            {ChainAssets.map((chain, index) => {
-              const isSelected = data?.chainId === chain.id;
+            {CHAIN_ASSETS.map((chain, index) => {
+              const isSelected = data?.chainName === chain.chainName;
               return (
                 <BoxWithTitle
-                  onClick={() => setData((prev) => ({ ...prev, chainId: chain.id }))}
+                  onClick={() => setData((prev) => ({ ...prev, chainName: chain.chainName }))}
                   selected={isSelected}
                   key={index}
                   title={chain.shortTxt}
@@ -83,7 +84,7 @@ export const ConnectDialog = forwardRef<ConnectPromptFn, ConnectDialogProps>((pr
             <BoxWithTitle
               selected={data?.wallet === 'metamask'}
               onClick={() => setData((prev) => ({ ...prev, wallet: 'metamask' }))}
-              src={Metamask}
+              src="/assets/metamask.svg"
               width={50}
               height={50}
               title="Metamask"
@@ -116,11 +117,7 @@ const BoxWithTitle: React.FC<any> = ({
         cursor: 'pointer',
         '&:hover p': { color: 'grey.900' },
       }}>
-      {typeof src === 'string' ? (
-        <img src={src} alt={alt} {...assetProps} />
-      ) : (
-        React.createElement(src, assetProps)
-      )}
+      <img src={src} alt={alt} {...assetProps} />
       <Typography sx={{ mt: 1 }} color={selected ? 'grey.900' : 'grey.400'}>
         {title}
       </Typography>

@@ -1,22 +1,21 @@
-import { AppInput, RHFAppInputProps } from '@/components/core/AppInput';
-import { shortenAddress } from '@/utils/helpers';
+import { AppInput } from '@/components';
+import { RHFAppInputProps } from '@/components/core/AppInput';
+import { useAppWeb3 } from '@/hooks';
+import { shortenAddress } from '@/utils';
+import { InputAdornment } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useController } from 'react-hook-form';
 
-export const RHFAddressInput: React.FC<RHFAppInputProps> = ({
-  controller,
-  helperText,
-  ...props
-}) => {
-  const { rules, ...withoutRules } = controller;
+export const RHFAddressInput: React.FC<RHFAppInputProps> = ({ controller }) => {
+  const { account } = useAppWeb3();
 
   const [focused, setFocused] = useState(false);
-  const onFocus = () => setFocused(true);
+  const onFocus = useCallback(() => setFocused(true), []);
 
   const {
     field: { name, onChange, value, ref, onBlur },
     fieldState: { invalid, error },
-  } = useController(props?.disabled ? withoutRules : controller);
+  } = useController(controller);
 
   const [shorten, setShorten] = useState('');
 
@@ -25,6 +24,7 @@ export const RHFAddressInput: React.FC<RHFAppInputProps> = ({
     if (s) {
       setShorten(shortenAddress(value, 8, 8));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s]);
 
   const _onChange = useCallback((e: any) => {
@@ -36,7 +36,7 @@ export const RHFAddressInput: React.FC<RHFAppInputProps> = ({
   }, []);
 
   const inputProps = {
-    helperText: error?.message ?? helperText,
+    helperText: error?.message,
     name,
     onChange: _onChange,
     value: focused ? value : shorten,
@@ -51,5 +51,18 @@ export const RHFAddressInput: React.FC<RHFAppInputProps> = ({
       : undefined,
   };
 
-  return <AppInput {...props} {...inputProps} />;
+  if (!account) return null;
+
+  return (
+    <AppInput
+      {...inputProps}
+      label="Destination"
+      helperText="This is the arrival network address"
+      startAdornment={
+        <InputAdornment position="start">
+          <img src="/assets/metamask.svg" alt="metamask" />
+        </InputAdornment>
+      }
+    />
+  );
 };

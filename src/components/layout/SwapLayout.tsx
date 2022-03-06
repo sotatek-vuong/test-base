@@ -1,15 +1,27 @@
-import { Box } from '@mui/material';
+import { QueryMapping } from '@/hooks';
+import { Container, Paper, Link, Typography } from '@mui/material';
+import Head from 'next/head';
 import React from 'react';
 
 export const IndexLayout: React.FC = (props) => {
   return (
-    <Box
-      sx={{
-        flex: 1,
-        position: 'relative',
-      }}>
+    <Container maxWidth="md" sx={{ my: 5, [QueryMapping.mobile]: { my: 3 } }}>
+      <Head>
+        <title>Plastiks Bridge</title>
+      </Head>
+
       {props.children}
-    </Box>
+
+      <Paper sx={{ my: 2, p: 2, textAlign: 'center', fontWeight: 'bold' }}>
+        <Link href="/assets">View Proof Of Assets</Link>
+        <br />
+        <Link href="/guide">User Guide</Link>
+      </Paper>
+
+      <Typography variant="body2" color="grey.700" align="center">
+        The safe, fast and most secure way to bring cross-chain assets to Plastik chains
+      </Typography>
+    </Container>
   );
 };
 

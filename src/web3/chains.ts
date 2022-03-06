@@ -1,13 +1,10 @@
 import type { AddEthereumChainParameter } from '@web3-react/types';
 import _ from 'lodash';
 import { BigNumber } from 'ethers';
+import { ChainInfo } from '@/utils';
 
 export function getAddChainParameters(chainId: number) {
   const chainInfo = _.find(CHAINS, { chainId });
-
-  if (!chainInfo && process.env.NODE_ENV !== 'production') {
-    console.warn('Dev: Unsupported network');
-  }
 
   if (chainInfo) {
     return {
@@ -30,10 +27,8 @@ const BNB: AddEthereumChainParameter['nativeCurrency'] = {
   decimals: 18,
 };
 
-export const CHAIN_IDS = [
-  process.env.NEXT_PUBLIC_CELO_CHAIN_ID!,
-  process.env.NEXT_PUBLIC_BSC_CHAIN_ID!,
-].map(Number);
+const CELO_CHAIN_ID = +process.env.NEXT_PUBLIC_CELO_CHAIN_ID!;
+const BSC_CHAIN_ID = +process.env.NEXT_PUBLIC_BSC_CHAIN_ID!;
 
 export const CHAINS: AddEthereumChainParameter[] = [
   {
@@ -59,9 +54,40 @@ export const CHAINS: AddEthereumChainParameter[] = [
   },
   {
     chainName: 'BSC (Testnet)',
-    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+    rpcUrls: ['https://data-seed-prebsc-2-s2.binance.org:8545'],
     chainId: 97,
     nativeCurrency: BNB,
     blockExplorerUrls: ['https://bscscan.com'],
   },
 ];
+
+export const CHAIN_ASSETS: ChainInfo[] = [
+  {
+    chainName: 'celo',
+    chainId: CELO_CHAIN_ID,
+    txt: 'Celo',
+    shortTxt: 'Celo',
+    icon: '/coins/celo.svg',
+    bridge: process.env.NEXT_PUBLIC_CELO_BRIDGE_ADDRESS!,
+  },
+  {
+    chainName: 'bsc',
+    chainId: BSC_CHAIN_ID,
+    txt: 'Binance Smart Chain',
+    shortTxt: 'Binance',
+    icon: '/coins/bsc.svg',
+    bridge: process.env.NEXT_PUBLIC_BSC_BRIDGE_ADDRESS!,
+  },
+];
+export const ChainIdToChainName = {
+  [CELO_CHAIN_ID]: 'celo',
+  [BSC_CHAIN_ID]: 'bsc',
+};
+
+export const getChainIdByName = (chainName?: string): number => {
+  return _.find(CHAIN_ASSETS, { chainName })?.chainId || -1;
+};
+
+export const findChainAsset = (chainName?: string) => {
+  return _.find(CHAIN_ASSETS, { chainName }) || null;
+};

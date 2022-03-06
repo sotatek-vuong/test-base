@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import type { InputBaseProps } from '@mui/material';
+import type { FormLabelProps, InputBaseProps } from '@mui/material';
 import {
   FormControl,
   InputBase,
@@ -9,9 +9,11 @@ import {
 } from '@mui/material';
 import type { UseControllerProps } from 'react-hook-form';
 import { useController } from 'react-hook-form';
+import { QueryMapping } from '@/hooks';
 
 export interface AppInputProps extends InputBaseProps {
   label?: React.ReactNode;
+  FormLabelProps?: FormLabelProps;
   required?: boolean;
   helperText?: any;
   helperTextProps?: FormHelperTextProps;
@@ -28,6 +30,9 @@ export const AppInput: React.FC<AppInputProps> = (props) => {
     helperTextProps,
     onChange,
     pattern,
+    FormLabelProps,
+    fullWidth = true,
+    error,
     ...rest
   } = props;
 
@@ -41,23 +46,22 @@ export const AppInput: React.FC<AppInputProps> = (props) => {
 
       const ok = pattern.test(e.target.value);
       if (ok) {
-        onChange(e);
+        return onChange(e);
       }
+      return;
     },
     [onChange, pattern],
   );
 
   const input = (
     <InputBase
-      fullWidth
-      id={name}
       {...rest}
       onChange={_onChange}
       sx={{
         bgcolor: '#F5F5F5',
         color: 'grey.900',
         p: 1.5,
-        borderRadius: '8px',
+        borderRadius: 1,
         borderWidth: 1,
         borderStyle: 'solid',
         borderColor: 'transparent',
@@ -74,23 +78,28 @@ export const AppInput: React.FC<AppInputProps> = (props) => {
   );
 
   return (
-    <FormControl required={required} fullWidth>
+    <FormControl fullWidth={fullWidth} error={error} required={required}>
       {label && (
         <FormLabel
-          focused={false}
-          sx={{ mb: 1, fontSize: 18 }}
           color="secondary"
-          required={required}
-          htmlFor={name}>
+          sx={{
+            mb: 1,
+            fontSize: 18,
+            [QueryMapping.mobile]: {
+              mb: 0.25,
+            },
+            ...FormLabelProps?.sx,
+          }}
+          {...FormLabelProps}>
           {label}
         </FormLabel>
       )}
       {input}
       {helperText && (
         <FormHelperText
+          component="div"
           {...helperTextProps}
-          sx={{ color: 'grey.700', fontSize: 16, ml: 0, mt: 1.5, ...helperTextProps?.sx }}
-          id={name}>
+          sx={{ color: 'grey.700', fontSize: 16, ml: 0, mt: 1.5, ...helperTextProps?.sx }}>
           {helperText}
         </FormHelperText>
       )}
@@ -120,10 +129,7 @@ export const RHFAppInput: React.FC<RHFAppInputProps> = ({ controller, helperText
     sx: invalid
       ? { borderColor: (theme: any) => `${theme.palette.error.main} !important` }
       : undefined,
-
-    helperTextProps: {
-      error: invalid,
-    },
+    error: invalid,
   };
 
   return <AppInput {...props} {...inputProps} />;

@@ -1,5 +1,7 @@
+import { buttonBaseClasses, dialogClasses } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import { Shadows } from '@mui/material/styles/shadows';
+import type {} from '@mui/lab/themeAugmentation';
 
 export const custom = {
   success: '#3CC480',
@@ -37,6 +39,17 @@ declare module '@mui/material/Button' {
   }
 }
 
+const defaultTheme = createTheme();
+
+const CONTAINER_PADDING = 24 * 2;
+const breakpoints = {
+  xs: 0,
+  sm: 420 + CONTAINER_PADDING,
+  md: 560 + CONTAINER_PADDING,
+  lg: 1130 + CONTAINER_PADDING,
+  xl: 1440 + CONTAINER_PADDING,
+};
+
 export const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -48,7 +61,7 @@ export const theme = createTheme({
     secondary: { main: custom.secondary },
     neutral: custom.grey,
     grey: custom.grey,
-    success: { main: custom.success },
+    success: { main: custom.success, contrastText: '#fff' },
     warning: { main: custom.warning },
     error: { main: custom.error, contrastText: '#fff' },
     divider: custom.grey[100],
@@ -70,23 +83,7 @@ export const theme = createTheme({
 
     allVariants: { fontWeight: 500, color: custom.black, lineHeight: 1.5 },
   },
-  breakpoints: {
-    values: (() => {
-      // affects to `Dialog` and `Container`
-      // this is the padding of the `Container`
-      // you can override later in `sx` props
-      const paddingLeft = 24;
-      const paddingRight = 24;
-      const padding = paddingLeft + paddingRight;
-      return {
-        xs: 0,
-        sm: 420 + padding,
-        md: 560 + padding,
-        lg: 1130 + padding,
-        xl: 1440 + padding,
-      };
-    })(),
-  },
+  breakpoints: { values: breakpoints },
   shape: {
     borderRadius: 16,
   },
@@ -108,10 +105,33 @@ export const theme = createTheme({
     },
     MuiButtonBase: {
       defaultProps: { disableRipple: true },
+      styleOverrides: {
+        root: {
+          '&.Mui-disabled': {
+            color: `${custom.white} !important`,
+            backgroundColor: `${custom.grey[200]} !important`,
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        sizeSmall: {
+          fontWeight: 'normal',
+          fontSize: 11,
+          lineHeight: '15px',
+          height: 18,
+        },
+      },
     },
 
     MuiButton: {
-      defaultProps: { variant: 'contained', color: 'primary', size: 'large' },
+      defaultProps: {
+        variant: 'contained',
+        color: 'primary',
+        size: 'large',
+        disableElevation: true,
+      },
       styleOverrides: {
         root: {
           fontSize: 20,
@@ -133,6 +153,9 @@ export const theme = createTheme({
         },
       },
     },
+    MuiLoadingButton: {
+      defaultProps: { loadingIndicator: 'Loading...' },
+    },
     MuiListItemText: { defaultProps: { disableTypography: true } },
     MuiLink: {
       defaultProps: { underline: 'hover' },
@@ -152,16 +175,70 @@ export const theme = createTheme({
       },
     },
     MuiAlert: {
+      defaultProps: { variant: 'outlined' },
       styleOverrides: {
-        root: { borderRadius: '4px' },
+        root: { padding: 16, borderRadius: '4px', color: custom.grey[800] },
+        message: { padding: 0 },
+        icon: { padding: 0 },
         outlinedSuccess: {
           backgroundColor: custom.grey[50],
         },
       },
     },
+    MuiAlertTitle: {
+      styleOverrides: { root: { padding: 0 } },
+    },
     MuiCheckbox: {
       styleOverrides: {
         root: { color: custom.grey[800] },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+
+          [defaultTheme.breakpoints.down(breakpoints.md)]: {
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        container: {},
+        ...(() => {
+          const m = 16;
+          const mx = m * 2;
+          const maxWidth = `calc(100% - ${mx}px) !important`;
+          const width = `calc(100% - ${mx}px)`;
+          return {
+            paper: {
+              margin: m,
+              maxWidth,
+            },
+
+            // paperWidthXs: {
+            // width: breakpoints.xs,
+            // maxWidth: breakpoints.xs,
+            //   [`&.${dialogClasses.paperScrollBody}`]: {
+            //     [defaultTheme.breakpoints.down(breakpoints.xs)]: {
+            //       maxWidth,
+            //     },
+            //   },
+            // },
+
+            paperWidthSm: {
+              width: breakpoints.sm,
+              maxWidth: `calc(${breakpoints.sm} - ${mx}px)`,
+              [`&.${dialogClasses.paperScrollBody}`]: {
+                [defaultTheme.breakpoints.down(breakpoints.sm)]: {
+                  maxWidth,
+                },
+              },
+            },
+          };
+        })(),
       },
     },
   },
