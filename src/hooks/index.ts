@@ -3,3 +3,4 @@ export * from './web3/useBalance';
 export * from './useDialogPrompt';
 export * from './useTokenBridge';
 export * from './useBreakpoint';
+export * from './useThrowableAsyncFn';

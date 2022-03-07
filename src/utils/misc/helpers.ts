@@ -28,5 +28,5 @@ export const getCoinPathBySymbol = (symbol: string, extension = 'svg') => {
 };
 
 export const isNativeToken = (address: any): address is string => {
-  return typeof address === 'string' && Boolean(address) && BigNumber.from(address).eq(0);
+  return typeof address === 'string' && !Boolean(address) && BigNumber.from(+address).eq(0);
 };

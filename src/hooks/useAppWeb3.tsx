@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import _ from 'lodash';
 import { getPriorityConnector } from '@web3-react/core';
 import { hasMetamask, isClient } from '@/utils';
-import { ChainIdToChainName, getAddChainParameters, getChainIdByName, metamask } from '@/web3';
+import { ChainIdToChainName, findChainAsset, getAddChainParameters, metamask } from '@/web3';
 import {
   ConnectDialog,
   ConnectPromptFn,
@@ -61,8 +61,8 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
     usePriorityIsActivating,
     usePriorityError,
   } = useMemo(getConnector, []);
-  const chainId = usePriorityChainId?.();
 
+  const chainId = usePriorityChainId?.();
   const connector = usePriorityConnector?.();
   const provider = usePriorityProvider?.(chainId);
   const account = usePriorityAccount?.();
@@ -73,33 +73,13 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
   const chainName = chainId ? ChainIdToChainName[chainId] : undefined;
 
   useEffect(() => {
-    if (connector) {
-      connector!.connectEagerly!();
-    }
+    connector.connectEagerly?.();
   }, [Boolean(connector)]);
-
-  const addChain = useCallback(
-    async (_chainName?: string) => {
-      const _chainId = getChainIdByName(_chainName);
-      if (_chainId === -1) return;
-
-      try {
-        await provider?.send('wallet_addEthereumChain', [getAddChainParameters(_chainId)]);
-      } catch (err) {
-        console.log(err);
-      }
-    },
-    [provider],
-  );
 
   const addToken = useCallback(
     async (token: AddTokenParams, type = 'ERC20') => {
-      try {
-        // @ts-ignore
-        await provider?.send('wallet_watchAsset', { type, options: token });
-      } catch (err) {
-        console.log(err);
-      }
+      // @ts-ignore
+      await provider?.send('wallet_watchAsset', { type, options: token });
     },
     [provider],
   );
@@ -109,24 +89,24 @@ export const AppWeb3Provider: React.FC = ({ children }) => {
       if (!hasMetamask()) {
         return setOpenInstallHelper(true);
       }
-      if (getChainIdByName(_chainName) === -1) return;
+
+      const chain = findChainAsset(_chainName);
+      if (!chain) return;
 
       try {
-        await addChain(_chainName);
-        await connector?.activate(_chainName);
+        await provider?.send('wallet_addEthereumChain', [getAddChainParameters(chain.chainId)]);
+        await connector.activate(chain.chainId);
       } catch (err) {
         console.log({ err });
       }
     },
-    [connector, addChain],
+    [connector, provider],
   );
 
   const changeChain = useCallback(async () => {
     const _chainName = await networkRef.current?.prompt();
 
-    if (_chainName) {
-      await activateChain(_chainName);
-    }
+    await activateChain(_chainName);
   }, [activateChain]);
 
   const connect = useCallback(async () => {

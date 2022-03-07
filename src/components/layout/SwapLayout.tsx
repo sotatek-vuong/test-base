@@ -13,9 +13,9 @@ export const IndexLayout: React.FC = (props) => {
       {props.children}
 
       <Paper sx={{ my: 2, p: 2, textAlign: 'center', fontWeight: 'bold' }}>
-        <Link href="/assets">View Proof Of Assets</Link>
+        <Link href="/poa">View Proof Of Assets</Link>
         <br />
-        <Link href="/guide">User Guide</Link>
+        <Link href="/help">User Guide</Link>
       </Paper>
 
       <Typography variant="body2" color="grey.700" align="center">

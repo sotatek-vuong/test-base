@@ -11,3 +11,4 @@ export * from './module/NetworkDialog';
 export * from './module/TokenPairDialog';
 export * from './module/ConnectDialog';
 export * from './module/Bridge';
+export * from './module/POA';

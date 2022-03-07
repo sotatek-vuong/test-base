@@ -23,8 +23,9 @@
       "@/icons": ["./src/assets/icons/index.ts"],
       "@/web3": ["./src/web3/index.ts"],
       "@/api": ["./src/api/index.ts"],
-      "@/store/*": ["./src/store/*"],
 
+      "@/store/*": ["./src/store/*"],
+      "@/web3/*": ["./src/web3/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/components/*": ["./src/components/*"]
     }

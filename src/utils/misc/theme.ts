@@ -81,7 +81,7 @@ export const theme = createTheme({
     body1: { fontSize: 16 },
     body2: { fontSize: 14 },
 
-    allVariants: { fontWeight: 500, color: custom.black, lineHeight: 1.5 },
+    allVariants: { fontWeight: 500, color: custom.grey[900], lineHeight: 1.5 },
   },
   breakpoints: { values: breakpoints },
   shape: {
@@ -115,6 +115,10 @@ export const theme = createTheme({
       },
     },
     MuiChip: {
+      defaultProps: {
+        variant: 'filled',
+        size: 'small',
+      },
       styleOverrides: {
         sizeSmall: {
           fontWeight: 'normal',

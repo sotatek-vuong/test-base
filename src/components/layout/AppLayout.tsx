@@ -5,10 +5,12 @@ import { useAppWeb3 } from '@/hooks';
 import { useDispatch } from 'react-redux';
 import { useEffectOnce } from 'react-use';
 import { getCoins, getTokenPairs } from '@/store/actions';
+import { useSelector } from 'react-redux';
 export interface AppLayout {}
 
 export const AppLayout: React.FC<AppLayout> = (props) => {
   const { chainId, isActivating, chainName, changeChain } = useAppWeb3();
+  const assetsLoading = useSelector((s) => s.meta.coins.loading || s.meta.tokenPairs.loading);
 
   const dispatch = useDispatch();
 
@@ -19,7 +21,7 @@ export const AppLayout: React.FC<AppLayout> = (props) => {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexFlow: 'column wrap' }}>
-      {isActivating ? (
+      {isActivating || assetsLoading ? (
         <LinearProgress />
       ) : (
         <React.Fragment>

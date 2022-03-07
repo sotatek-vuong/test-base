@@ -27,8 +27,8 @@ const BNB: AddEthereumChainParameter['nativeCurrency'] = {
   decimals: 18,
 };
 
-const CELO_CHAIN_ID = +process.env.NEXT_PUBLIC_CELO_CHAIN_ID!;
-const BSC_CHAIN_ID = +process.env.NEXT_PUBLIC_BSC_CHAIN_ID!;
+export const CELO_CHAIN_ID = +process.env.NEXT_PUBLIC_CELO_CHAIN_ID!;
+export const BSC_CHAIN_ID = +process.env.NEXT_PUBLIC_BSC_CHAIN_ID!;
 
 export const CHAINS: AddEthereumChainParameter[] = [
   {
@@ -84,10 +84,6 @@ export const ChainIdToChainName = {
   [BSC_CHAIN_ID]: 'bsc',
 };
 
-export const getChainIdByName = (chainName?: string): number => {
-  return _.find(CHAIN_ASSETS, { chainName })?.chainId || -1;
-};
-
 export const findChainAsset = (chainName?: string) => {
-  return _.find(CHAIN_ASSETS, { chainName }) || null;
+  return _.find(CHAIN_ASSETS, { chainName });
 };

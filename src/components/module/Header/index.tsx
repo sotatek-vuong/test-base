@@ -7,7 +7,7 @@ import { Link } from '@/components';
 import { findChainAsset } from '@/web3';
 
 export const Header: React.FC = () => {
-  const { account, connect, disconnect, changeChain, chainName } = useAppWeb3();
+  const { account, isActive, connect, disconnect, changeChain, chainName } = useAppWeb3();
 
   const chainInfo = findChainAsset(chainName);
 

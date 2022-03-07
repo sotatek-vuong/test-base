@@ -1,20 +1,24 @@
 import type { NextPage } from 'next';
-import { ConfirmDialog, ConfirmPromptFn, getIndexLayout, Link, RHFAppInput } from '@/components';
+import {
+  ConfirmDialog,
+  ConfirmPromptFn,
+  getIndexLayout,
+  RHFAppInput,
+  TxStatePromptFn,
+} from '@/components';
 import { useForm } from 'react-hook-form';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { QueryMapping, useAppWeb3, useBridge } from '@/hooks';
-import { BridgeFormInterface, isClient } from '@/utils';
+import { BridgeFormInterface, isClient, isNativeToken } from '@/utils';
 import { findChainAsset } from '@/web3';
-import { RHFAddressInput, RHFChain, RHFAsset } from '@/components';
+import { RHFAddressInput, RHFChain, RHFAsset, TxStateDialog } from '@/components';
 import { Zap, Alert as AlertIcon, Swap } from '@/icons';
 import {
-  Container,
   Stack,
   Paper,
   Alert,
   Button,
   AlertTitle,
-  Typography,
   IconButton,
   InputAdornment,
   Portal,
@@ -32,15 +36,16 @@ const getDefaultChain = (chainName?: string) => {
 const Home: NextPage = () => {
   const { account, chainName } = useAppWeb3();
 
-  const { control, handleSubmit, getValues, setValue, watch } = useForm<BridgeFormInterface>({
-    defaultValues: {
-      ...getDefaultChain(chainName),
-      dest: account,
-      amount: '',
-      pair: null,
-    },
-    mode: 'all',
-  });
+  const { control, handleSubmit, getValues, setValue, watch, clearErrors } =
+    useForm<BridgeFormInterface>({
+      defaultValues: {
+        ...getDefaultChain(chainName),
+        dest: account,
+        amount: '',
+        pair: null,
+      },
+      mode: 'all',
+    });
 
   useEffect(() => {
     if (account) {
@@ -53,36 +58,56 @@ const Home: NextPage = () => {
       const { from, to } = getDefaultChain(chainName);
       setValue('from', from);
       setValue('to', to);
+      clearErrors(['amount']);
     }
   }, [chainName]);
 
   const confirmRef = useRef<ConfirmPromptFn>();
+  const txStateRef = useRef<TxStatePromptFn>();
 
   const mobile = useMediaQuery(QueryMapping.mobile);
 
   const chainAssets = useMemo(() => findChainAsset(chainName), [chainName]);
   const [from, to, pair] = watch(['from', 'to', 'pair']);
 
-  const spender = chainAssets?.bridge;
-
-  const { balance, doApprove, isApproved, loading } = useBridge(pair?.from_address, spender);
+  const { balance, isApproved, loading, lock, doApprove } = useBridge(
+    pair?.from_address,
+    chainAssets?.bridge,
+  );
 
   const _balance = balance.toFixed(2);
   const matchChain = chainName === from;
 
   const onSubmit = handleSubmit(async (data) => {
-    const _spender = chainAssets?.bridge;
+    try {
+      if (data.pair?.from_address && !isApproved) {
+        txStateRef.current?.prompt('loading');
+        await doApprove();
+        txStateRef.current?.prompt('submitted');
 
-    if (_spender && !isApproved) {
-      await doApprove(_spender);
+        return;
+      }
+
+      const confirmed = await confirmRef.current?.prompt(data);
+
+      if (confirmed) {
+        txStateRef.current?.prompt('loading');
+
+        await lock(data);
+
+        txStateRef.current?.prompt('submitted');
+      }
+    } catch (err) {
+      console.log(err);
+
+      txStateRef.current?.prompt('error');
     }
-
-    const confirmed = await confirmRef.current?.prompt(data);
   });
 
   return (
     <>
       <ConfirmDialog ref={confirmRef} />
+      <TxStateDialog ref={txStateRef} />
 
       <Paper
         component={(props) => <Stack {...props} component="form" />}
@@ -156,7 +181,14 @@ const Home: NextPage = () => {
             pair && (
               <InputAdornment position="end">
                 <Button
-                  onClick={() => pair && setValue('amount', _balance)}
+                  onClick={() =>
+                    pair &&
+                    setValue('amount', _balance, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                      shouldTouch: true,
+                    })
+                  }
                   size="small"
                   variant="outlined"
                   color="secondary">
@@ -217,13 +249,15 @@ const Home: NextPage = () => {
               },
             }}
             type="submit">
-            {account
-              ? pair?.from_address
-                ? isApproved
-                  ? 'Next'
-                  : 'Approve'
-                : 'Next'
-              : 'Connect Wallet'}
+            {(() => {
+              if (!account) return 'Connect Wallet';
+
+              if (loading.approve || loading.balance) return 'Loading...';
+
+              if (!pair?.from_address || isNativeToken(pair?.from_address)) return 'Next';
+
+              return isApproved ? 'Next' : 'Approve';
+            })()}
           </Button>
         </Portal>
 

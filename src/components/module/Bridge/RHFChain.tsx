@@ -105,7 +105,7 @@ export const RHFChain: React.FC<RHFChainProps> = ({ label, controller, ...paperP
 
           {mobile && matchChain && (
             <>
-              <Chip variant="filled" color="success" label="Connected" size="small" />
+              <Chip color="success" label="Connected" />
               <Box
                 component="img"
                 sx={{ width: 16, height: 16, ml: 1, mr: 1.5 }}

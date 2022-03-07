@@ -8,13 +8,12 @@ export type PromptFn<T, Args = unknown> =
 
 export function useDialogPrompt<T, Args = unknown>(ref: React.ForwardedRef<PromptFn<T, Args>>) {
   const [open, setOpen] = useState(false);
-
-  const paramsRef = useRef<Args>();
+  const [params, setParams] = useState<Args>();
 
   const promiseRef = useRef<{ resolve: (value: T | undefined) => void } | undefined>();
 
   const prompt = useCallback((args?: Args) => {
-    paramsRef.current = args;
+    setParams(args);
     setOpen(true);
     return new Promise<T | undefined>((resolve) => {
       promiseRef.current = { resolve };
@@ -37,10 +36,10 @@ export function useDialogPrompt<T, Args = unknown>(ref: React.ForwardedRef<Promp
   );
 
   const handleReject = useCallback(() => {
+    setParams(undefined);
     promiseRef.current?.resolve(undefined);
-    paramsRef.current = undefined;
     handleClose();
   }, [handleClose]);
 
-  return { params: paramsRef.current, open, handleReject, handleResolve };
+  return { params, open, handleReject, handleResolve };
 }

@@ -61,7 +61,7 @@ export const AppInput: React.FC<AppInputProps> = (props) => {
         bgcolor: '#F5F5F5',
         color: 'grey.900',
         p: 1.5,
-        borderRadius: 1,
+        borderRadius: 0.5,
         borderWidth: 1,
         borderStyle: 'solid',
         borderColor: 'transparent',
